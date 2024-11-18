@@ -6,6 +6,6 @@ torch==2.2.0
 uvicorn==0.23.1
 pydantic==2.0.3
 langchain==0.0.236
-langchain-core==0.0.226
+langchain-core==0.3.19
 langchain-groq==0.0.2
 python-dotenv==1.0.0
