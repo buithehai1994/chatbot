@@ -1,43 +1,83 @@
+import os
 from fastapi import FastAPI, HTTPException
-from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
-from langchain.llms import HuggingFacePipeline
+from pydantic import BaseModel
 from langchain.chains import LLMChain
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+)
+from langchain_core.messages import SystemMessage
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize FastAPI
 app = FastAPI()
 
-# Load a generative model (e.g., GPT-2, GPT-Neo)
-model_name = "EleutherAI/gpt-neo-1.3B"  # You can use other models like GPT-2, GPT-3, etc.
-model = AutoModelForCausalLM.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Define the input structure for the question
+class UserQuery(BaseModel):
+    question: str
 
-tokenizer.pad_token = tokenizer.eos_token
+# Fetch Groq API key from environment variables
+groq_api_key = os.getenv('GROQ_API_KEY')
 
-# Create the Hugging Face pipeline for text generation
-hf_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer)
+# Check if the Groq API key is missing
+if not groq_api_key:
+    raise ValueError("GROQ_API_KEY environment variable is not set. Please add it to the .env file.")
 
-# Wrap the Hugging Face pipeline with LangChain's HuggingFacePipeline
-llm = HuggingFacePipeline(pipeline=hf_pipeline)
+model = 'llama3-8b-8192'
 
-# Define LangChain's ChatPromptTemplate
-chat_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", "You are a helpful assistant."),
-        ("user", "{input}"),
-        ("assistant", "{output}"),
-    ]
+# Initialize the Groq chat model
+groq_chat = ChatGroq(groq_api_key=groq_api_key, model_name=model)
+
+# System prompt and memory for the conversation
+system_prompt = 'You are a friendly conversational chatbot'
+conversational_memory_length = 5  # Number of previous messages to remember
+
+memory = ConversationBufferWindowMemory(
+    k=conversational_memory_length, memory_key="chat_history", return_messages=True
 )
 
-# Define the LangChain chain that uses the generative model
-llm_chain = LLMChain(prompt=chat_prompt, llm=llm)
-
 @app.post("/chat")
-async def chat(message: str):
-    if not message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
-    
-    # Use LangChain to generate a response
-    prompt = f"User: {message}\nAssistant:"
-    generated_response = llm_chain.run(input=prompt)
+async def chat_with_bot(user_query: UserQuery):
+    """
+    This endpoint receives a question from the user, processes it, and returns the chatbot's response.
+    """
+    user_question = user_query.question
 
-    return {"response": generated_response}
+    # Ensure the user question is not empty
+    if not user_question.strip():
+        raise HTTPException(status_code=400, detail="Question must not be empty.")
+
+    # Construct the chat prompt using various components
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(content=system_prompt),  # Persistent system prompt
+            MessagesPlaceholder(variable_name="chat_history"),  # Placeholder for chat history
+            HumanMessagePromptTemplate.from_template("{human_input}"),  # User's current input
+        ]
+    )
+
+    # Create a conversation chain
+    conversation = LLMChain(
+        llm=groq_chat,
+        prompt=prompt,
+        verbose=False,
+        memory=memory,  # Use memory to keep track of chat history
+    )
+
+    try:
+        # Generate the chatbot's response
+        response = conversation.predict(human_input=user_question)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+    return {"response": response}
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Groq Chatbot API. Use the /chat endpoint to chat."}
