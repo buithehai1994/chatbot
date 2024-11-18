@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # FastAPI server URL
-API_URL = "http://127.0.0.1:8000/chat"
+API_URL = "https://chatbot-fvcf.onrender.com/chat"
 
 # Streamlit app title
 st.title("Interactive Chat with Groq Bot 🤖")
