@@ -10,6 +10,10 @@ from langchain_core.prompts import (
 from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize FastAPI
 app = FastAPI()
@@ -18,22 +22,12 @@ app = FastAPI()
 class UserQuery(BaseModel):
     question: str
 
-# Function to load the API key from the file in /etc/secrets
-def load_groq_api_key():
-    try:
-        with open("/etc/secrets/api_key", "r") as f:
-            return f.read().strip()  # Remove any trailing newlines or spaces
-    except FileNotFoundError:
-        raise ValueError("API key file not found.")
-    except Exception as e:
-        raise ValueError(f"An error occurred while reading the API key: {e}")
-
-# Load the API key from the secret file
-groq_api_key = load_groq_api_key()
+# Fetch Groq API key from environment variables
+groq_api_key = os.getenv('GROQ_API_KEY')
 
 # Check if the Groq API key is missing
 if not groq_api_key:
-    raise ValueError("GROQ_API_KEY environment variable is not set")
+    raise ValueError("GROQ_API_KEY environment variable is not set. Please add it to the .env file.")
 
 model = 'llama3-8b-8192'
 
@@ -44,7 +38,9 @@ groq_chat = ChatGroq(groq_api_key=groq_api_key, model_name=model)
 system_prompt = 'You are a friendly conversational chatbot'
 conversational_memory_length = 5  # Number of previous messages to remember
 
-memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
+memory = ConversationBufferWindowMemory(
+    k=conversational_memory_length, memory_key="chat_history", return_messages=True
+)
 
 @app.post("/chat")
 async def chat_with_bot(user_query: UserQuery):
@@ -53,8 +49,9 @@ async def chat_with_bot(user_query: UserQuery):
     """
     user_question = user_query.question
 
-    if not user_question:
-        raise HTTPException(status_code=400, detail="Question must not be empty")
+    # Ensure the user question is not empty
+    if not user_question.strip():
+        raise HTTPException(status_code=400, detail="Question must not be empty.")
 
     # Construct the chat prompt using various components
     prompt = ChatPromptTemplate.from_messages(
@@ -73,8 +70,12 @@ async def chat_with_bot(user_query: UserQuery):
         memory=memory,  # Use memory to keep track of chat history
     )
 
-    # Generate the chatbot's response
-    response = conversation.predict(human_input=user_question)
+    try:
+        # Generate the chatbot's response
+        response = conversation.predict(human_input=user_question)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
     return {"response": response}
 
 @app.get("/")
