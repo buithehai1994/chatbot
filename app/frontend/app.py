@@ -48,8 +48,8 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     sentiment_label = sentiment_result[0]['label']
     sentiment_score = sentiment_result[0]['score']
 
-    # Append sentiment information to bot response
-    sentiment_info = f"(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)"
+     # Append sentiment information to bot response (smaller font for sentiment info)
+    sentiment_info = f"<p style='font-size: 12px;'>(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)</p>"
     bot_response_with_sentiment = f"{bot_response} {sentiment_info}"
 
     # Immediately display the bot's response with sentiment
