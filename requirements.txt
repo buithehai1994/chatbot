@@ -177,6 +177,8 @@ pygments==2.18.0
     # via rich
 python-dateutil==2.9.0.post0
     # via pandas
+python-dotenv==1.0.1
+    # via -r requirements.in
 pytz==2024.2
     # via pandas
 pyyaml==6.0.2
@@ -269,8 +271,10 @@ vadersentiment==3.3.2
     # via -r requirements.in
 watchdog==6.0.0
     # via streamlit
+wheel==0.45.0
+    # via -r requirements.in
 yarl==1.17.2
     # via aiohttp
-dotenv
+
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
