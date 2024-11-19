@@ -22,7 +22,7 @@ def preprocess_text(text):
 API_URL = "https://chatbot-fvcf.onrender.com/chat"
 
 # Streamlit app title
-st.title("Sentiment Analysis Chatbot 🤖")
+st.title("Chatbot 🤖")
 
 # Initialize chat history in session state
 if "chat_history" not in st.session_state:
