@@ -6,19 +6,28 @@
 #
 aiohappyeyeballs==2.4.3
     # via aiohttp
-aiohttp==3.11.2
+aiohttp==3.11.3
     # via langchain
 aiosignal==1.3.1
     # via aiohttp
+altair==5.4.1
+    # via streamlit
 annotated-types==0.7.0
     # via pydantic
 anyio==4.6.2.post1
     # via
     #   groq
-    #   httpcore
+    #   httpx
     #   starlette
 attrs==24.2.0
-    # via aiohttp
+    # via
+    #   aiohttp
+    #   jsonschema
+    #   referencing
+blinker==1.9.0
+    # via streamlit
+cachetools==5.5.0
+    # via streamlit
 certifi==2024.8.30
     # via
     #   httpcore
@@ -27,7 +36,9 @@ certifi==2024.8.30
 charset-normalizer==3.4.0
     # via requests
 click==8.1.7
-    # via uvicorn
+    # via
+    #   streamlit
+    #   uvicorn
 colorama==0.4.6
     # via
     #   click
@@ -49,6 +60,10 @@ fsspec==2024.10.0
     # via
     #   huggingface-hub
     #   torch
+gitdb==4.0.11
+    # via gitpython
+gitpython==3.1.43
+    # via streamlit
 greenlet==3.1.1
     # via sqlalchemy
 groq==0.12.0
@@ -57,9 +72,9 @@ h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==0.17.3
+httpcore==1.0.7
     # via httpx
-httpx==0.24.0
+httpx==0.27.2
     # via
     #   -r requirements.in
     #   groq
@@ -75,11 +90,18 @@ idna==3.10
     #   requests
     #   yarl
 jinja2==3.1.4
-    # via torch
+    # via
+    #   altair
+    #   pydeck
+    #   torch
 jsonpatch==1.33
     # via langchain-core
 jsonpointer==3.0.0
     # via jsonpatch
+jsonschema==4.23.0
+    # via altair
+jsonschema-specifications==2024.10.1
+    # via jsonschema
 langchain==0.3.7
     # via -r requirements.in
 langchain-core==0.3.19
@@ -95,31 +117,50 @@ langsmith==0.1.143
     # via
     #   langchain
     #   langchain-core
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==3.0.2
     # via jinja2
+mdurl==0.1.2
+    # via markdown-it-py
 mpmath==1.3.0
     # via sympy
 multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
+narwhals==1.14.0
+    # via altair
 networkx==3.4.2
     # via torch
 numpy==1.26.4
     # via
     #   langchain
+    #   pandas
+    #   pydeck
+    #   streamlit
     #   transformers
 orjson==3.10.11
     # via langsmith
 packaging==24.2
     # via
+    #   altair
     #   huggingface-hub
     #   langchain-core
+    #   streamlit
     #   transformers
+pandas==2.2.3
+    # via streamlit
+pillow==11.0.0
+    # via streamlit
 propcache==0.2.0
     # via
     #   aiohttp
     #   yarl
+protobuf==5.28.3
+    # via streamlit
+pyarrow==18.0.0
+    # via streamlit
 pydantic==2.9.2
     # via
     #   -r requirements.in
@@ -130,55 +171,85 @@ pydantic==2.9.2
     #   langsmith
 pydantic-core==2.23.4
     # via pydantic
+pydeck==0.9.1
+    # via streamlit
+pygments==2.18.0
+    # via rich
+python-dateutil==2.9.0.post0
+    # via pandas
+pytz==2024.2
+    # via pandas
 pyyaml==6.0.2
     # via
     #   huggingface-hub
     #   langchain
     #   langchain-core
     #   transformers
+referencing==0.35.1
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 regex==2024.11.6
     # via transformers
-requests==2.31.0
+requests==2.32.3
     # via
     #   -r requirements.in
     #   huggingface-hub
     #   langchain
     #   langsmith
     #   requests-toolbelt
+    #   streamlit
     #   transformers
     #   vadersentiment
 requests-toolbelt==1.0.0
     # via langsmith
+rich==13.9.4
+    # via streamlit
+rpds-py==0.21.0
+    # via
+    #   jsonschema
+    #   referencing
 safetensors==0.4.5
     # via transformers
+six==1.16.0
+    # via python-dateutil
+smmap==5.0.1
+    # via gitdb
 sniffio==1.3.1
     # via
     #   anyio
     #   groq
-    #   httpcore
     #   httpx
 sqlalchemy==2.0.36
     # via langchain
 starlette==0.41.3
     # via fastapi
-sympy==1.13.3
+streamlit==1.40.1
+    # via -r requirements.in
+sympy==1.13.1
     # via torch
 tenacity==9.0.0
     # via
     #   langchain
     #   langchain-core
-tokenizers==0.15.2
+    #   streamlit
+tokenizers==0.20.3
     # via transformers
-torch==2.2.0
+toml==0.10.2
+    # via streamlit
+torch==2.5.1
     # via -r requirements.in
+tornado==6.4.1
+    # via streamlit
 tqdm==4.67.0
     # via
     #   huggingface-hub
     #   transformers
-transformers==4.37.0
+transformers==4.46.3
     # via -r requirements.in
 typing-extensions==4.12.2
     # via
+    #   altair
     #   fastapi
     #   groq
     #   huggingface-hub
@@ -186,13 +257,20 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+    #   streamlit
     #   torch
+tzdata==2024.2
+    # via pandas
 urllib3==2.2.3
     # via requests
-uvicorn==0.23.1
+uvicorn==0.32.0
     # via -r requirements.in
 vadersentiment==3.3.2
     # via -r requirements.in
+watchdog==6.0.0
+    # via streamlit
 yarl==1.17.2
     # via aiohttp
-transformers
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
