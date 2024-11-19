@@ -271,6 +271,6 @@ watchdog==6.0.0
     # via streamlit
 yarl==1.17.2
     # via aiohttp
-
+dotenv
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
