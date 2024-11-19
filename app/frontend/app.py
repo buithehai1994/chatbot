@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import random
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import time
 
 # Initialize the VADER sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
@@ -149,6 +150,10 @@ for user_msg, bot_msg in st.session_state.chat_history:
 
 # User input field
 if user_input := st.chat_input("Type your message and press Enter to chat..."):
+
+    # Record the start time for the inference rate
+    start_time = time.time()
+
     # Analyze user sentiment and get sentiment label
     user_sentiment_score = analyzer.polarity_scores(user_input)["compound"]
     user_sentiment_label, user_color = classify_sentiment(user_sentiment_score)
@@ -182,6 +187,12 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     # Modify the bot's response by appending the tone
     bot_message = f"{bot_tone} {bot_message}"
 
+    # Record the end time for the inference rate
+    end_time = time.time()
+
+    # Calculate inference rate (time taken for the API response in seconds)
+    inference_rate = end_time - start_time
+
     # Add the bot's message with adjusted tone to chat history
     st.session_state.chat_history[-1] = (user_input, bot_message)
 
@@ -202,3 +213,4 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
             with st.chat_message("assistant"):
                 st.markdown(bot_msg, unsafe_allow_html=True)
                 st.markdown(bot_sentiment_info, unsafe_allow_html=True)
+                st.markdown(f"<br><span style='color:grey;'>Inference rate: {inference_rate:.3f} seconds</span>", unsafe_allow_html=True)
