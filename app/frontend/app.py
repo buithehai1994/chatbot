@@ -1,36 +1,37 @@
 import streamlit as st
 import requests
-from transformers import pipeline
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # FastAPI server URL
 API_URL = "https://chatbot-fvcf.onrender.com/chat"
 
-# Load the sentiment analysis pipeline using Hugging Face
-sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+# Initialize VADER sentiment analyzer
+analyzer = SentimentIntensityAnalyzer()
 
 # Streamlit app title
 st.title("Interactive Chat with Groq Bot 🤖")
 
 # Initialize conversation history in session state
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []  # List to store (user, bot) messages
+    st.session_state.chat_history = []  # List to store (user, bot, sentiment) messages
 
 # Display the chat history dynamically
-for user_msg, bot_msg in st.session_state.chat_history:
+for user_msg, bot_msg, sentiment_info in st.session_state.chat_history:
     with st.chat_message("user"):
         st.write(user_msg)
     if bot_msg is not None:
         with st.chat_message("assistant"):
-            st.write(bot_msg)
+            st.markdown(bot_msg, unsafe_allow_html=True)
+            st.markdown(sentiment_info, unsafe_allow_html=True)
 
 # User input field
 if user_input := st.chat_input("Type your message and press Enter to chat..."):
     # Immediately display the user message
     with st.chat_message("user"):
         st.write(user_input)
-    
+
     # Add user message to chat history
-    st.session_state.chat_history.append((user_input, None))
+    st.session_state.chat_history.append((user_input, None, None))
 
     # Send POST request to FastAPI
     payload = {"question": user_input}
@@ -43,24 +44,30 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     except requests.exceptions.RequestException as e:
         bot_response = f"An error occurred while connecting to the server: {e}"
 
-    # Perform sentiment analysis on the bot's response using Hugging Face pipeline
-    sentiment_result = sentiment_analyzer(bot_response)
-    sentiment_label = sentiment_result[0]['label']
-    sentiment_score = sentiment_result[0]['score']
+    # Perform sentiment analysis using VADER
+    sentiment_score = analyzer.polarity_scores(bot_response)
 
-    # Prepare formatted response
-    sentiment_info = f"(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)"
-    bot_response_with_sentiment = f"{bot_response} {sentiment_info}"
+    # Determine sentiment label and color based on compound score
+    if sentiment_score['compound'] >= 0.05:
+        sentiment_label = "POSITIVE"
+        sentiment_color = "green"
+    elif sentiment_score['compound'] <= -0.05:
+        sentiment_label = "NEGATIVE"
+        sentiment_color = "red"
+    else:
+        sentiment_label = "NEUTRAL"
+        sentiment_color = "gray"
 
-    # Display the bot's response with custom formatting
-    st.markdown(
-        f'''
-        <div style="font-size: 24px; font-weight: bold; color: #2E8B57; background-color: #F0E68C; padding: 15px; border-radius: 10px;">
-            Bot Response: {bot_response_with_sentiment}
-        </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    # Create sentiment info string with color
+    sentiment_info = f"<br><span style='color:{sentiment_color}; font-weight: bold;'>Sentiment: {sentiment_label}, Confidence: {sentiment_score['compound']*100:.2f}%</span>"
 
-    # Add bot response with sentiment to chat history
-    st.session_state.chat_history[-1] = (user_input, bot_response_with_sentiment)
+    # Prepare the bot message with sentiment
+    bot_message = f"<p>{bot_response}</p>"
+
+    # Add the bot's message and sentiment to the history
+    st.session_state.chat_history[-1] = (user_input, bot_message, sentiment_info)
+
+    # Immediately display the bot's response with formatting
+    with st.chat_message("assistant"):
+        st.markdown(bot_message, unsafe_allow_html=True)
+        st.markdown(sentiment_info, unsafe_allow_html=True)
