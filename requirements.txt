@@ -195,3 +195,4 @@ vadersentiment==3.3.2
     # via -r requirements.in
 yarl==1.17.2
     # via aiohttp
+transformers
