@@ -1,8 +1,12 @@
 import streamlit as st
 import requests
+from transformers import pipeline
 
 # FastAPI server URL
 API_URL = "https://chatbot-fvcf.onrender.com/chat"
+
+# Load the sentiment analysis pipeline using Hugging Face
+sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
 # Streamlit app title
 st.title("Interactive Chat with Groq Bot 🤖")
@@ -24,6 +28,7 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     # Immediately display the user message
     with st.chat_message("user"):
         st.write(user_input)
+    
     # Add user message to chat history
     st.session_state.chat_history.append((user_input, None))
 
@@ -38,9 +43,18 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     except requests.exceptions.RequestException as e:
         bot_response = f"An error occurred while connecting to the server: {e}"
 
-    # Immediately display the bot's response
-    with st.chat_message("assistant"):
-        st.write(bot_response)
+    # Perform sentiment analysis on the bot's response using Hugging Face pipeline
+    sentiment_result = sentiment_analyzer(bot_response)
+    sentiment_label = sentiment_result[0]['label']
+    sentiment_score = sentiment_result[0]['score']
 
-    # Add bot response to chat history
-    st.session_state.chat_history[-1] = (user_input, bot_response)
+    # Append sentiment information to bot response
+    sentiment_info = f"(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)"
+    bot_response_with_sentiment = f"{bot_response} {sentiment_info}"
+
+    # Immediately display the bot's response with sentiment
+    with st.chat_message("assistant"):
+        st.write(bot_response_with_sentiment)
+
+    # Add bot response with sentiment to chat history
+    st.session_state.chat_history[-1] = (user_input, bot_response_with_sentiment)
