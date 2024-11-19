@@ -1,39 +1,70 @@
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import streamlit as st
 import requests
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import re
 
-# FastAPI server URL
-API_URL = "https://chatbot-fvcf.onrender.com/chat"
-
-# Initialize VADER sentiment analyzer
+# Initialize the VADER sentiment analyzer
 analyzer = SentimentIntensityAnalyzer()
 
+# Function to get VADER sentiment score
+def get_vader_sentiment(text):
+    sentiment = analyzer.polarity_scores(text)
+    return sentiment['compound'], sentiment['pos'], sentiment['neu'], sentiment['neg']
+
+# Function to preprocess text: remove unnecessary characters, normalize spaces, etc.
+def preprocess_text(text):
+    # Remove unnecessary punctuation and normalize whitespace
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    text = re.sub(r'\s+', ' ', text).strip()  # Normalize spaces
+    return text
+
+# FastAPI server URL (part of your chatbot)
+API_URL = "https://chatbot-fvcf.onrender.com/chat"
+
 # Streamlit app title
-st.title("Interactive Chat with Groq Bot 🤖")
+st.title("Sentiment Analysis Chatbot 🤖")
 
-# Initialize conversation history in session state
+# Initialize chat history in session state
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []  # List to store (user, bot, sentiment) messages
+    st.session_state.chat_history = []
 
-# Display the chat history dynamically
-for user_msg, bot_msg, sentiment_info in st.session_state.chat_history:
+# Display the chat history
+for user_msg, bot_msg, user_sentiment_info, bot_sentiment_info in st.session_state.chat_history:
     with st.chat_message("user"):
         st.write(user_msg)
     if bot_msg is not None:
         with st.chat_message("assistant"):
             st.markdown(bot_msg, unsafe_allow_html=True)
-            st.markdown(sentiment_info, unsafe_allow_html=True)
+        st.markdown(bot_sentiment_info, unsafe_allow_html=True)
 
 # User input field
 if user_input := st.chat_input("Type your message and press Enter to chat..."):
-    # Immediately display the user message
+    # Preprocess the user input
+    preprocessed_user_input = preprocess_text(user_input)
+
+    # Perform sentiment analysis on the user's input using VADER
+    user_compound, user_pos, user_neu, user_neg = get_vader_sentiment(preprocessed_user_input)
+
+    # Custom threshold for sentiment classification for user input
+    if user_compound >= 0.05:
+        user_sentiment_label = "positive"
+    elif user_compound <= -0.05:
+        user_sentiment_label = "negative"
+    else:
+        user_sentiment_label = "neutral"
+
+    # Prepare sentiment info for the user's input
+    user_sentiment_info = f"<br><span style='color:{'green' if user_sentiment_label == 'positive' else 'red' if user_sentiment_label == 'negative' else 'grey'}; font-weight: bold;'>User Sentiment: {user_sentiment_label.capitalize()}, Score: {user_compound:.2f}</span>"
+
+     # Display the bot's response with sentiment info
     with st.chat_message("user"):
         st.write(user_input)
+        st.markdown(user_sentiment_info, unsafe_allow_html=True)
 
     # Add user message to chat history
-    st.session_state.chat_history.append((user_input, None, None))
+    st.session_state.chat_history.append((user_input, None, user_sentiment_info, None))
 
-    # Send POST request to FastAPI
+    # Send the user's message to the chatbot API
     payload = {"question": user_input}
     try:
         response = requests.post(API_URL, json=payload)
@@ -44,30 +75,30 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     except requests.exceptions.RequestException as e:
         bot_response = f"An error occurred while connecting to the server: {e}"
 
-    # Perform sentiment analysis using VADER
-    sentiment_score = analyzer.polarity_scores(bot_response)
+    # Preprocess the bot's response
+    preprocessed_bot_response = preprocess_text(bot_response)
 
-    # Determine sentiment label and color based on compound score
-    if sentiment_score['compound'] >= 0.05:
-        sentiment_label = "POSITIVE"
-        sentiment_color = "green"
-    elif sentiment_score['compound'] <= -0.05:
-        sentiment_label = "NEGATIVE"
-        sentiment_color = "red"
+    # Perform sentiment analysis on the bot's response using VADER
+    bot_compound, bot_pos, bot_neu, bot_neg = get_vader_sentiment(preprocessed_bot_response)
+
+    # Custom threshold for sentiment classification for bot's response
+    if bot_compound >= 0.05:
+        bot_sentiment_label = "positive"
+    elif bot_compound <= -0.05:
+        bot_sentiment_label = "negative"
     else:
-        sentiment_label = "NEUTRAL"
-        sentiment_color = "gray"
+        bot_sentiment_label = "neutral"
 
-    # Create sentiment info string with color
-    sentiment_info = f"<br><span style='color:{sentiment_color}; font-weight: bold;'>Sentiment: {sentiment_label}, Confidence: {sentiment_score['compound']*100:.2f}%</span>"
+    # Prepare sentiment info for the bot's response
+    bot_sentiment_info = f"<br><span style='color:{'green' if bot_sentiment_label == 'positive' else 'red' if bot_sentiment_label == 'negative' else 'grey'}; font-weight: bold;'>Bot Sentiment: {bot_sentiment_label.capitalize()}, Score: {bot_compound:.2f}</span>"
 
-    # Prepare the bot message with sentiment
+    # Prepare the bot message
     bot_message = f"<p>{bot_response}</p>"
 
-    # Add the bot's message and sentiment to the history
-    st.session_state.chat_history[-1] = (user_input, bot_message, sentiment_info)
+    # Update chat history with sentiment info
+    st.session_state.chat_history[-1] = (user_input, bot_message, user_sentiment_info, bot_sentiment_info)
 
-    # Immediately display the bot's response with formatting
+    # Display the bot's response with sentiment info
     with st.chat_message("assistant"):
         st.markdown(bot_message, unsafe_allow_html=True)
-        st.markdown(sentiment_info, unsafe_allow_html=True)
+        st.markdown(bot_sentiment_info, unsafe_allow_html=True)
