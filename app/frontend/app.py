@@ -48,13 +48,19 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     sentiment_label = sentiment_result[0]['label']
     sentiment_score = sentiment_result[0]['score']
 
-     # Append sentiment information to bot response (smaller font for sentiment info)
-    sentiment_info = f"<p style='font-size: 12px;'>(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)</p>"
+    # Prepare formatted response
+    sentiment_info = f"(Sentiment: {sentiment_label}, Confidence: {sentiment_score*100:.2f}%)"
     bot_response_with_sentiment = f"{bot_response} {sentiment_info}"
 
-    # Immediately display the bot's response with sentiment
-    with st.chat_message("assistant"):
-        st.write(bot_response_with_sentiment)
+    # Display the bot's response with custom formatting
+    st.markdown(
+        f'''
+        <div style="font-size: 24px; font-weight: bold; color: #2E8B57; background-color: #F0E68C; padding: 15px; border-radius: 10px;">
+            Bot Response: {bot_response_with_sentiment}
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
 
     # Add bot response with sentiment to chat history
     st.session_state.chat_history[-1] = (user_input, bot_response_with_sentiment)
