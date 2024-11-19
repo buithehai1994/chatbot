@@ -19,7 +19,7 @@ def preprocess_text(text):
     return text
 
 # FastAPI server URL (part of your chatbot)
-API_URL = "https://chatbot-fvcf.onrender.com/chat"
+API_URL = "https://chatbot-api-ewoq.onrender.com/chat"
 
 # Streamlit app title
 st.title("Chatbot 🤖")
