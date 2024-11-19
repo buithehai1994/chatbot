@@ -17,4 +17,4 @@ COPY app ./app
 EXPOSE 8000
 
 # Command to run FastAPI
-CMD ["uvicorn", "app.backend.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.backend.api:app", "--host", "0.0.0.0", "--port", "8080"]
