@@ -23,7 +23,7 @@ class UserQuery(BaseModel):
     question: str
 
 # Fetch Groq API key from environment variables
-groq_api_key = os.getenv("API_KEY")
+groq_api_key = os.getenv("GROQ_API_KEY")
 
 # Check if the Groq API key is missing
 if not groq_api_key:
