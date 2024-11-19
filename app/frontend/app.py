@@ -46,15 +46,24 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     user_compound, user_pos, user_neu, user_neg = get_vader_sentiment(preprocessed_user_input)
 
     # Custom threshold for sentiment classification for user input
-    if user_compound >= 0.05:
-        user_sentiment_label = "positive"
-    elif user_compound <= -0.05:
-        user_sentiment_label = "negative"
-    else:
+    if user_compound >= 0.25:
+        user_sentiment_label = "very_positive"
+    elif user_compound >= 0.05:
+        user_sentiment_label = "slightly_positive"
+    elif user_compound > -0.05 and user_compound < 0.05:
         user_sentiment_label = "neutral"
+    elif user_compound <= -0.25:
+        user_sentiment_label = "very_negative"
+    else:
+        user_sentiment_label = "slightly_negative"
 
     # Prepare sentiment info for the user's input
-    user_sentiment_info = f"<br><span style='color:{'green' if user_sentiment_label == 'positive' else 'red' if user_sentiment_label == 'negative' else 'grey'}; font-weight: bold;'>User Sentiment: {user_sentiment_label.capitalize()}, Score: {user_compound:.2f}</span>"
+    user_sentiment_info = f"<br><span style='color:{'green' if user_sentiment_label == 'very_positive' else 
+                                                'lightgreen' if user_sentiment_label == 'slightly_positive' else 
+                                                'grey' if user_sentiment_label == 'neutral' else
+                                                'orange' if user_sentiment_label == 'slightly_negative' else 
+                                                'red'}; font-weight: bold;'>User Sentiment: {user_sentiment_label.replace('_', ' ').capitalize()}, Score: {user_compound:.2f}</span>"
+
 
      # Display the bot's response with sentiment info
     with st.chat_message("user"):
@@ -82,15 +91,23 @@ if user_input := st.chat_input("Type your message and press Enter to chat..."):
     bot_compound, bot_pos, bot_neu, bot_neg = get_vader_sentiment(preprocessed_bot_response)
 
     # Custom threshold for sentiment classification for bot's response
-    if bot_compound >= 0.05:
-        bot_sentiment_label = "positive"
-    elif bot_compound <= -0.05:
-        bot_sentiment_label = "negative"
-    else:
+    if bot_compound >= 0.25:
+        bot_sentiment_label = "very_positive"
+    elif bot_compound >= 0.05:
+        bot_sentiment_label = "slightly_positive"
+    elif bot_compound > -0.05 and bot_compound < 0.05:
         bot_sentiment_label = "neutral"
+    elif bot_compound <= -0.25:
+        bot_sentiment_label = "very_negative"
+    else:
+        bot_sentiment_label = "slightly_negative"
 
     # Prepare sentiment info for the bot's response
-    bot_sentiment_info = f"<br><span style='color:{'green' if bot_sentiment_label == 'positive' else 'red' if bot_sentiment_label == 'negative' else 'grey'}; font-weight: bold;'>Bot Sentiment: {bot_sentiment_label.capitalize()}, Score: {bot_compound:.2f}</span>"
+    bot_sentiment_info = f"<br><span style='color:{'green' if bot_sentiment_label == 'very_positive' else 
+                                              'lightgreen' if bot_sentiment_label == 'slightly_positive' else 
+                                              'grey' if bot_sentiment_label == 'neutral' else
+                                              'orange' if bot_sentiment_label == 'slightly_negative' else 
+                                              'red'}; font-weight: bold;'>Bot Sentiment: {bot_sentiment_label.replace('_', ' ').capitalize()}, Score: {bot_compound:.2f}</span>"
 
     # Prepare the bot message
     bot_message = f"<p>{bot_response}</p>"
