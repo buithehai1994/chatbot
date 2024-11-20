@@ -29,7 +29,7 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 if not groq_api_key:
     raise ValueError("GROQ_API_KEY environment variable is not set. Please add it to the .env file.")
 
-model = 'llama-3.1-70b-versatile '
+model = 'gemma2-9b-it '
 
 # Initialize the Groq chat model
 groq_chat = ChatGroq(groq_api_key=groq_api_key, model_name=model)
